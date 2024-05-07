@@ -4,8 +4,12 @@ const fs = require('fs');
 const resizeImg = require('resize-img');
 const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
 
+process.env.NODE_ENV = 'production';
+
 const isDev = process.env.NODE_ENV !== 'production'; //developer modu ? 'development' ?
 const isMac = process.platform === 'darwin';
+
+let mainWindow;
 
 // Create main window
 function createMainWindow() {
@@ -47,9 +51,12 @@ app.whenReady().then(()=>{
     const mainMenu = Menu.buildFromTemplate(menu);
     Menu.setApplicationMenu(mainMenu);
 
+    // Remove mainWindow from memory on close
+    mainWindow.on('closed', ()=> (mainWindow = null));
+
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0){
-            createMainWindow
+            createMainWindow();
         }
     })
 })
@@ -108,7 +115,7 @@ async function resizeImage({ imgPath, width, height, dest}){
 
         //Send sucesss to renderer
         mainWindow.webContents.send('image:done');
-        
+
         //Open dest folder
         shell.openPath(dest);
         
